@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevBoard Pro - IT Dashboard</title>
+    <style>
+        /* === ТЕМЫ (CSS ПЕРЕМЕННЫЕ) === */
+        /* 1. Кровавая (Blood) - По умолчанию */
+        body.theme-blood {
+            --bg-main: #050000;
+            --bg-panel: #110202;
+            --border-col: #440000;
+            --accent: #cc0000;
+            --accent-hover: #ff1a1a;
+            --text-main: #ffffff;
+            --text-muted: #b0b0b0;
+        }
+
+        /* 2. Матрица (Matrix) */
+        body.theme-matrix {
+            --bg-main: #000500;
+            --bg-panel: #001102;
+            --border-col: #004400;
+            --accent: #00cc00;
+            --accent-hover: #1aff1a;
+            --text-main: #ffffff;
+            --text-muted: #80b380;
+        }
+
+        /* 3. Бездна (Abyss) */
+        body.theme-abyss {
+            --bg-main: #00020a;
+            --bg-panel: #02081a;
+            --border-col: #001b4d;
+            --accent: #0066ff;
+            --accent-hover: #3385ff;
+            --text-main: #ffffff;
+            --text-muted: #809fff;
+        }
+
+        /* === ГЛОБАЛЬНЫЕ СТИЛИ === */
+        * { box-sizing: border-box; outline: none; }
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-main); color: var(--text-muted);
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            display: flex; height: 100vh; overflow: hidden;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        button { cursor: pointer; border: none; font-family: inherit; transition: 0.2s; }
+        .hidden { display: none !important; }
+
+        /* === ЭКРАН ЛОГИНА (АВТОРИЗАЦИЯ) === */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-main); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: var(--bg-panel); border: 2px solid var(--accent);
+            padding: 40px; border-radius: 8px; text-align: center; width: 350px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .login-box h2 { color: var(--accent); margin-top: 0; text-transform: uppercase; }
+        .login-box input {
+            width: 100%; padding: 12px; margin: 15px 0;
+            background: #000; border: 1px solid var(--border-col);
+            color: var(--text-main); font-family: inherit; text-align: center;
+        }
+        .login-box input:focus { border-color: var(--accent); }
+        .login-box button {
+            width: 100%; padding: 12px; background: var(--accent);
+            color: #fff; font-weight: bold; text-transform: uppercase;
+        }
+        .login-box button:hover { background: var(--accent-hover); }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 280px; background-color: var(--bg-panel);
+            border-right: 2px solid var(--border-col);
+            display: flex; flex-direction: column; z-index: 10;
+        }
+        .logo-section {
+            padding: 25px; border-bottom: 2px solid var(--border-col);
+            font-size: 1.4rem; font-weight: 900; color: var(--accent);
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        .nav-list { list-style: none; padding: 15px 0; margin: 0; }
+        .nav-item {
+            padding: 15px 25px; cursor: pointer; color: var(--text-muted);
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: rgba(0,0,0,0.5); color: var(--text-main); }
+        .nav-item.active { background: rgba(0,0,0,0.8); color: var(--text-main); border-left: 3px solid var(--accent); }
+
+        .user-profile {
+            margin-top: auto; padding: 20px; border-top: 2px solid var(--border-col); background: rgba(0,0,0,0.5);
+        }
+        .user-avatar {
+            width: 50px; height: 50px; border: 2px solid var(--accent);
+            background: #111; margin-bottom: 10px; border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-weight: bold; color: var(--text-main); font-size: 0.95rem; }
+        .user-github { font-size: 0.8rem; color: var(--accent); display: block; margin-top: 5px; text-decoration: none; }
+
+        /* === MAIN CONTENT === */
+        .content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-main); }
+        .header {
+            padding: 20px 40px; border-bottom: 1px solid var(--border-col);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .page-title { font-size: 1.2rem; color: var(--text-main); }
+        .controls-group { display: flex; gap: 10px; }
+        
+        .btn {
+            background: var(--bg-panel); border: 1px solid var(--border-col);
+            color: var(--text-muted); padding: 8px 15px; border-radius: 4px; font-size: 0.85rem;
+        }
+        .btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .btn:hover:not(.active) { color: var(--text-main); border-color: var(--accent); }
+        
+        .btn-action { background: var(--border-col); color: var(--text-main); font-weight: bold; }
+        .btn-action:hover { background: var(--accent); }
+
+        /* Grid System */
+        .dashboard-grid { display: grid; padding: 30px; gap: 25px; grid-template-columns: repeat(4, 1fr); }
+        .panel {
+            background: var(--bg-panel); border: 1px solid var(--border-col);
+            padding: 20px; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .panel-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; color: var(--accent); text-transform: uppercase; }
+
+        .chart-panel { grid-column: span 3; }
+        .stats-panel { grid-column: span 1; display: flex; flex-direction: column; gap: 20px; }
+        .stat-card { text-align: center; border-bottom: 1px solid var(--border-col); padding-bottom: 15px; }
+        .stat-card:last-child { border-bottom: none; }
+        .stat-value { font-size: 2.2rem; font-weight: bold; color: var(--text-main); margin-bottom: 5px; }
+
+        .svg-container { width: 100%; height: 250px; background: #000; border: 1px solid var(--border-col); position: relative; }
+
+        /* Drag and Drop Grid */
+        .draggable-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 0 30px 30px 30px;
+        }
+        .drag-panel {
+            cursor: grab; transition: transform 0.2s;
+        }
+        .drag-panel:active { cursor: grabbing; transform: scale(0.98); }
+        .drag-panel.dragging { opacity: 0.4; }
+        .drag-panel.over { border: 2px dashed var(--accent); }
+
+        .list-item { padding: 10px; border-bottom: 1px solid var(--border-col); font-size: 0.85rem; display: flex; justify-content: space-between; }
+        .list-item:last-child { border-bottom: none; }
+        .status-badge { color: var(--accent); font-weight: bold; }
+
+        textarea.notes-area {
+            width: 100%; height: 120px; background: #000; border: 1px solid var(--border-col);
+            color: var(--text-muted); font-family: inherit; padding: 10px; resize: none;
+        }
+
+        /* Tooltip */
+        #tooltip {
+            position: fixed; background: #000; border: 1px solid var(--accent);
+            color: #fff; padding: 5px 10px; font-size: 0.75rem; pointer-events: none; opacity: 0; z-index: 100;
+        }
+
+        /* Печать (PDF Export) */
+        @media print {
+            .sidebar, .controls-group, .btn-action, #login-screen { display: none !important; }
+            body, .content { background: #fff !important; color: #000 !important; height: auto; overflow: visible; }
+            .panel { border: 1px solid #ccc !important; box-shadow: none !important; background: #fff !important; page-break-inside: avoid; }
+            .panel-title, .stat-value, .status-badge { color: #000 !important; }
+            * { text-shadow: none !important; }
+            svg path, svg rect { stroke: #000 !important; fill: #555 !important; }
+            svg circle { fill: #000 !important; }
+        }
+    </style>
+</head>
+<body class="theme-blood">
+
+    <div id="tooltip"></div>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>System Login</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Введите GitHub Username для загрузки данных</p>
+            <input type="text" id="github-username" value="mbelgiba" placeholder="GitHub Username">
+            <button onclick="login()">Подключиться к API</button>
+            <p id="login-error" style="color: var(--accent); font-size: 0.8rem; margin-top: 15px; display: none;">Пользователь не найден!</p>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="logo-section">DevBoard</div>
+        <ul class="nav-list">
+            <li class="nav-item active" onclick="switchPage('main')">Дашборд</li>
+            <li class="nav-item" onclick="switchPage('settings')">Темы & Настройки</li>
+        </ul>
+
+        <div class="user-profile">
+            <div class="user-avatar" id="gh-avatar">
+                <img src="" alt="" id="avatar-img" class="hidden">
+            </div>
+            <div class="user-name" id="gh-name">Загрузка...</div>
+            <div id="gh-bio" style="font-size: 0.7rem; color: #888; margin-top: 5px;"></div>
+            <a href="#" id="gh-link" target="_blank" class="user-github">@username</a>
+        </div>
+    </aside>
+
+    <main class="content">
+        <header class="header">
+            <div class="page-title" id="breadcrumb">Main / Overview</div>
+            
+            <div class="controls-group">
+                <button class="btn btn-action" onclick="exportCSV()">Скачать CSV</button>
+                <button class="btn btn-action" onclick="window.print()">Экспорт PDF</button>
+            </div>
+        </header>
+
+        <div id="page-main" class="page-container">
+            <div style="padding: 10px 30px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn" onclick="updateData('week', this)">Неделя</button>
+                <button class="btn active" onclick="updateData('month', this)">Месяц</button>
+                <button class="btn" onclick="updateData('year', this)">Год</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="panel chart-panel">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div class="panel-title" style="margin:0;">Активность (Коммиты)</div>
+                        <button class="btn" id="toggleMode">Вид: Линейный</button>
+                    </div>
+                    <div class="svg-container">
+                        <svg id="svg-chart" viewBox="0 0 600 250" preserveAspectRatio="none" width="100%" height="100%"></svg>
+                    </div>
+                </div>
+
+                <div class="panel stats-panel">
+                    <div class="panel-title">Метрики API</div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="val-repos">0</div>
+                        <div class="stat-label">ПУБЛИЧНЫХ РЕПОЗИТОРИЕВ</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="val-followers">0</div>
+                        <div class="stat-label">ПОДПИСЧИКОВ (FOLLOWERS)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="val-points" style="color: var(--accent)">8.4k</div>
+                        <div class="stat-label">ЛОКАЛЬНЫЙ XP</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="draggable-grid" id="drag-container">
+                <div class="panel drag-panel" draggable="true">
+                    <div class="panel-title">Уведомления (Drag me)</div>
+                    <div class="list-item"><span>Обновлен репозиторий</span><span class="status-badge">10:45</span></div>
+                    <div class="list-item"><span>Новый pull request</span><span class="status-badge">Вчера</span></div>
+                    <div class="list-item"><span>Отказ API авторизации</span><span class="status-badge">КРИТ</span></div>
+                </div>
+
+                <div class="panel drag-panel" draggable="true">
+                    <div class="panel-title">Блокнот (Сохраняется)</div>
+                    <textarea class="notes-area" id="notes" placeholder="Пиши сюда идеи..."></textarea>
+                </div>
+
+                <div class="panel drag-panel" draggable="true">
+                    <div class="panel-title">Последние Репозитории</div>
+                    <div id="repo-list">Загрузка данных...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-settings" class="page-container hidden" style="padding: 30px;">
+            <div class="panel" style="max-width: 600px;">
+                <div class="panel-title">Выбор визуальной темы</div>
+                <p>Измените цветовое оформление интерфейса.</p>
+                <div style="display: flex; gap: 15px; margin-top: 20px;">
+                    <button class="btn active" onclick="setTheme('blood', this)">🩸 Blood (Кровавая)</button>
+                    <button class="btn" onclick="setTheme('matrix', this)">💻 Matrix (Матрица)</button>
+                    <button class="btn" onclick="setTheme('abyss', this)">🌌 Abyss (Бездна)</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. ДАННЫЕ ДЛЯ ГРАФИКОВ
+        const datasets = {
+            week: { labels: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'], points: [12, 19, 3, 5, 2, 3, 9], xp: '1.2k' },
+            month: { labels: ['Нед 1','Нед 2','Нед 3','Нед 4'], points: [65, 59, 80, 81], xp: '8.4k' },
+            year: { labels: ['Q1','Q2','Q3','Q4'], points: [300, 450, 320, 600], xp: '24.5k' }
+        };
+        let currentPeriod = 'month';
+        let currentMode = 'line'; // line / bar
+
+        // 2. АВТОРИЗАЦИЯ И GITHUB API
+        async function login() {
+            const username = document.getElementById('github-username').value.trim();
+            const btn = document.querySelector('.login-box button');
+            const errorTxt = document.getElementById('login-error');
+            
+            btn.innerText = "Подключение...";
+            errorTxt.style.display = 'none';
+
+            try {
+                // Запрашиваем профиль
+                const res = await fetch(`https://api.github.com/users/${username}`);
+                if (!res.ok) throw new Error('Not found');
+                const user = await res.json();
+
+                // Заполняем профиль
+                document.getElementById('gh-name').innerText = user.name || user.login;
+                document.getElementById('gh-bio').innerText = user.bio || 'Разработчик';
+                document.getElementById('gh-link').innerText = `@${user.login}`;
+                document.getElementById('gh-link').href = user.html_url;
+                document.getElementById('avatar-img').src = user.avatar_url;
+                document.getElementById('avatar-img').classList.remove('hidden');
+
+                // Статистика
+                document.getElementById('val-repos').innerText = user.public_repos;
+                document.getElementById('val-followers').innerText = user.followers;
+
+                // Запрашиваем репозитории
+                const repoRes = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=3`);
+                const repos = await repoRes.json();
+                const repoContainer = document.getElementById('repo-list');
+                repoContainer.innerHTML = '';
+                repos.forEach(repo => {
+                    repoContainer.innerHTML += `<div class="list-item"><span>${repo.name}</span><span class="status-badge">${repo.language || '-'}</span></div>`;
+                });
+
+                // Скрываем логин
+                document.getElementById('login-screen').classList.add('hidden');
+                drawChart();
+
+            } catch (err) {
+                btn.innerText = "Подключиться к API";
+                errorTxt.style.display = 'block';
+            }
+        }
+
+        // 3. СМЕНА ТЕМЫ (ФОНА)
+        function setTheme(themeName, btnElement) {
+            document.body.className = `theme-${themeName}`;
+            // Обновляем кнопки
+            const btns = btnElement.parentElement.querySelectorAll('.btn');
+            btns.forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            // Перерисовываем график, чтобы цвета обновились (через CSS переменные)
+            setTimeout(drawChart, 100); 
+        }
+
+        // 4. НАВИГАЦИЯ И ФИЛЬТРЫ
+        function switchPage(page) {
+            document.querySelectorAll('.page-container').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById('page-' + page).classList.remove('hidden');
+            const activeItem = [...document.querySelectorAll('.nav-item')].find(i => i.innerText.toLowerCase().includes(page === 'main' ? 'дашборд' : 'темы'));
+            if(activeItem) activeItem.classList.add('active');
+
+            document.getElementById('breadcrumb').innerText = page === 'main' ? 'Main / Overview' : 'System / Settings';
+        }
+
+        function updateData(period, btn) {
+            currentPeriod = period;
+            const btns = btn.parentElement.querySelectorAll('.btn');
+            btns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.getElementById('val-points').innerText = datasets[period].xp;
+            drawChart();
+        }
+
+        document.getElementById('toggleMode').onclick = function() {
+            currentMode = currentMode === 'line' ? 'bar' : 'line';
+            this.innerText = "Вид: " + (currentMode === 'line' ? 'Линейный' : 'Столбчатый');
+            drawChart();
+        };
+
+        // 5. ОТРИСОВКА ГРАФИКА
+        function drawChart() {
+            const svg = document.getElementById('svg-chart');
+            const tooltip = document.getElementById('tooltip');
+            svg.innerHTML = '';
+            
+            const data = datasets[currentPeriod];
+            const w = 600, h = 250, px = 40, py = 40;
+            const max = Math.max(...data.points) || 1;
+            
+            // Получаем текущий цвет акцента из CSS
+            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+            
+            if (currentMode === 'line') {
+                let pathStr = "";
+                data.points.forEach((v, i) => {
+                    const x = px + (i * ((w - px*2) / (data.points.length - 1)));
+                    const y = (h - py) - ((v / max) * (h - py*2));
+                    pathStr += (i === 0 ? "M" : "L") + `${x},${y} `;
+                    
+                    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    dot.setAttribute("cx", x); dot.setAttribute("cy", y); dot.setAttribute("r", 5);
+                    dot.setAttribute("fill", accentColor);
+                    dot.style.cursor = "pointer";
+                    
+                    dot.onmouseover = (e) => {
+                        tooltip.style.opacity = 1;
+                        tooltip.innerHTML = `${data.labels[i]}: <b>${v}</b>`;
+                        tooltip.style.left = e.pageX + 10 + 'px'; tooltip.style.top = e.pageY - 20 + 'px';
+                    };
+                    dot.onmouseout = () => tooltip.style.opacity = 0;
+                    svg.appendChild(dot);
+                });
+                
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                line.setAttribute("d", pathStr);
+                line.setAttribute("stroke", accentColor); line.setAttribute("stroke-width", 2);
+                line.setAttribute("fill", "none");
+                svg.insertBefore(line, svg.firstChild);
+            } else {
+                const barW = (w - px*2) / data.points.length - 10;
+                data.points.forEach((v, i) => {
+                    const x = px + (i * ((w - px*2) / data.points.length)) + 5;
+                    const barH = (v / max) * (h - py*2);
+                    const y = (h - py) - barH;
+                    
+                    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", x); rect.setAttribute("y", y);
+                    rect.setAttribute("width", barW); rect.setAttribute("height", barH || 1);
+                    rect.setAttribute("fill", accentColor);
+                    
+                    rect.onmouseover = (e) => {
+                        rect.style.opacity = 0.7;
+                        tooltip.style.opacity = 1; tooltip.innerHTML = `${data.labels[i]}: <b>${v}</b>`;
+                        tooltip.style.left = e.pageX + 10 + 'px'; tooltip.style.top = e.pageY - 20 + 'px';
+                    };
+                    rect.onmouseout = () => { rect.style.opacity = 1; tooltip.style.opacity = 0; };
+                    svg.appendChild(rect);
+                });
+            }
+        }
+
+        // 6. DRAG AND DROP (Перетаскивание)
+        const draggables = document.querySelectorAll('.drag-panel');
+        const container = document.getElementById('drag-container');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => draggable.classList.add('dragging'));
+            draggable.addEventListener('dragend', () => draggable.classList.remove('dragging'));
+        });
+
+        container.addEventListener('dragover', e => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(container, e.clientX);
+            const draggable = document.querySelector('.dragging');
+            if (afterElement == null) {
+                container.appendChild(draggable);
+            } else {
+                container.insertBefore(draggable, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, x) {
+            const draggableElements = [...container.querySelectorAll('.drag-panel:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = x - box.left - box.width / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child }
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // 7. ЭКСПОРТ В CSV
+        function exportCSV() {
+            const data = datasets[currentPeriod];
+            let csvContent = "Период,Значение\n";
+            data.labels.forEach((label, i) => {
+                csvContent += `${label},${data.points[i]}\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `report_${currentPeriod}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 8. ЗАМЕТКИ (СОХРАНЕНИЕ В БРАУЗЕР)
+        const notesArea = document.getElementById('notes');
+        notesArea.value = localStorage.getItem('devboard_notes') || "";
+        notesArea.oninput = () => localStorage.setItem('devboard_notes', notesArea.value);
+
+    </script>
+</body>
+</html>

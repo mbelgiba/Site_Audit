@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevBoard Pro - Dual System</title>
+    <style>
+        /* === УЛУЧШЕННЫЕ ТЕМЫ (CYBER-GLASS) === */
+        body.theme-blood {
+            --bg-main: radial-gradient(circle at top left, #1a0202 0%, #050000 100%);
+            --bg-panel: rgba(20, 5, 5, 0.6); --border-col: rgba(255, 0, 0, 0.3);
+            --accent: #ff003c; --accent-glow: 0 0 15px rgba(255, 0, 60, 0.4);
+            --text-main: #ffffff; --text-muted: #e0a0a0;
+        }
+        body.theme-matrix {
+            --bg-main: radial-gradient(circle at top left, #001a00 0%, #000500 100%);
+            --bg-panel: rgba(5, 20, 5, 0.6); --border-col: rgba(0, 255, 70, 0.3);
+            --accent: #00ff41; --accent-glow: 0 0 15px rgba(0, 255, 65, 0.4);
+            --text-main: #ffffff; --text-muted: #a0e0a0;
+        }
+        body.theme-abyss {
+            --bg-main: radial-gradient(circle at top left, #000a1a 0%, #00020a 100%);
+            --bg-panel: rgba(5, 10, 30, 0.6); --border-col: rgba(0, 150, 255, 0.3);
+            --accent: #00d2ff; --accent-glow: 0 0 15px rgba(0, 210, 255, 0.4);
+            --text-main: #ffffff; --text-muted: #a0c0e0;
+        }
+        body.theme-synthwave {
+            --bg-main: radial-gradient(circle at top left, #1a002a 0%, #0a0010 100%);
+            --bg-panel: rgba(30, 5, 40, 0.6); --border-col: rgba(255, 0, 255, 0.3);
+            --accent: #f0f; --accent-glow: 0 0 15px rgba(255, 0, 255, 0.4);
+            --text-main: #ffffff; --text-muted: #e0a0e0;
+        }
+
+        /* === ГЛОБАЛЬНЫЕ СТИЛИ === */
+        * { box-sizing: border-box; outline: none; transition: background-color 0.3s, border-color 0.3s; }
+        body {
+            margin: 0; padding: 0; background: var(--bg-main); color: var(--text-muted);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex; height: 100vh; overflow: hidden;
+        }
+        button { cursor: pointer; border: none; font-family: inherit; transition: 0.2s; }
+        .hidden { display: none !important; }
+        a { text-decoration: none; color: inherit; }
+
+        .glass-panel {
+            background: var(--bg-panel); border: 1px solid var(--border-col);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 12px; box-shadow: var(--accent-glow);
+        }
+
+        /* === ЭКРАН ЛОГИНА === */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .login-box { padding: 40px; text-align: center; width: 380px; }
+        .login-box h2 { color: var(--accent); margin-top: 0; text-transform: uppercase; text-shadow: var(--accent-glow); }
+        
+        .login-tabs { display: flex; border-bottom: 1px solid var(--border-col); margin-bottom: 20px; }
+        .login-tabs button { flex: 1; padding: 10px; background: transparent; color: var(--text-muted); font-weight: bold; border-bottom: 2px solid transparent; }
+        .login-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        .login-box input {
+            width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px;
+            background: rgba(0,0,0,0.5); border: 1px solid var(--border-col);
+            color: var(--text-main); font-family: inherit; text-align: center; 
+        }
+        .login-box input:focus { border-color: var(--accent); box-shadow: var(--accent-glow); }
+        .btn-submit {
+            width: 100%; padding: 12px; margin-top: 15px; background: var(--accent); border-radius: 6px;
+            color: #000; font-weight: bold; text-transform: uppercase; box-shadow: var(--accent-glow);
+        }
+        .btn-submit:hover { transform: scale(1.02); filter: brightness(1.2); }
+
+        /* === SIDEBAR === */
+        .sidebar {
+            width: 260px; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-col); display: flex; flex-direction: column; z-index: 10;
+        }
+        .logo-section {
+            padding: 25px; font-size: 1.5rem; font-weight: 900; color: var(--accent);
+            text-shadow: var(--accent-glow); text-transform: uppercase; letter-spacing: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center;
+        }
+        .nav-list { list-style: none; padding: 15px 0; margin: 0; flex: 1;}
+        .nav-item {
+            padding: 15px 25px; cursor: pointer; color: var(--text-muted); font-weight: 600;
+            border-left: 4px solid transparent; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
+        .nav-item.active { 
+            background: rgba(255,255,255,0.08); color: var(--text-main); 
+            border-left-color: var(--accent); box-shadow: inset 15px 0 20px -15px var(--accent);
+        }
+
+        .user-profile {
+            padding: 20px; border-top: 1px solid var(--border-col); background: rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .user-profile a:hover .user-avatar { border-color: var(--text-main); transform: scale(1.05); }
+        .user-avatar {
+            width: 60px; height: 60px; border: 2px solid var(--accent); box-shadow: var(--accent-glow);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden;
+            margin: 0 auto 10px auto; transition: 0.2s;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-name { font-weight: bold; color: var(--text-main); font-size: 1rem; display: block; }
+        .user-link-text { font-size: 0.75rem; color: var(--accent); display: block; margin-top: 5px; }
+
+        /* === MAIN CONTENT === */
+        .content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 30px; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .page-title { font-size: 1.2rem; color: var(--text-main); font-weight: 600; letter-spacing: 1px; }
+        
+        .top-controls { display: flex; gap: 15px; align-items: center; }
+        .lang-switch { display: flex; gap: 10px; font-weight: bold; cursor: pointer; color: var(--text-muted); }
+        .lang-switch span:hover, .lang-switch span.active { color: var(--accent); text-shadow: var(--accent-glow); }
+
+        .btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border-col);
+            color: var(--text-main); padding: 8px 18px; border-radius: 6px;
+            font-size: 0.8rem; font-weight: bold; text-transform: uppercase;
+        }
+        .btn:hover { background: var(--accent); color: #000; box-shadow: var(--accent-glow); }
+        .btn.active { background: var(--accent); color: #000; }
+
+        /* Layout Grids */
+        .dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(4, 1fr); margin-bottom: 25px; }
+        .chart-panel { grid-column: span 3; padding: 20px; }
+        .stats-panel { grid-column: span 1; display: flex; flex-direction: column; gap: 15px; }
+        
+        .stat-card { text-align: center; padding: 15px; border-radius: 12px; }
+        .stat-value { font-size: 2.2rem; font-weight: 800; color: var(--text-main); text-shadow: var(--accent-glow); margin-bottom: 5px; }
+        .stat-label { font-size: 0.7rem; opacity: 0.7; letter-spacing: 1px; text-transform: uppercase; }
+
+        .svg-container { width: 100%; height: 260px; background: rgba(0,0,0,0.3); border-radius: 8px; margin-top: 15px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+
+        /* Drag Grid */
+        .draggable-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .drag-panel { padding: 20px; cursor: grab; transition: transform 0.2s; height: 100%; min-height: 200px; display: flex; flex-direction: column; }
+        .drag-panel:active { cursor: grabbing; transform: scale(0.98); }
+        .drag-panel.dragging { opacity: 0.4; border: 1px dashed var(--accent); }
+
+        .panel-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; color: var(--accent); text-transform: uppercase; }
+        .list-item { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+        .list-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%; }
+        
+        textarea.notes-area {
+            flex: 1; width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-col);
+            color: var(--text-main); font-family: inherit; padding: 12px; resize: none; border-radius: 6px;
+        }
+
+        #tooltip {
+            position: fixed; background: var(--bg-panel); backdrop-filter: blur(10px);
+            border: 1px solid var(--accent); color: #fff; padding: 10px 15px; font-size: 0.85rem; 
+            pointer-events: none; opacity: 0; z-index: 1000; border-radius: 6px; box-shadow: var(--accent-glow);
+        }
+
+        /* Центрирование контейнера с аудитами */
+        .audit-box-centered {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body class="theme-blood">
+
+    <div id="tooltip"></div>
+
+    <div id="login-screen">
+        <div class="glass-panel login-box">
+            <h2>SYSTEM LOGIN</h2>
+            
+            <div class="login-tabs">
+                <button id="tab-github" class="active" onclick="switchLoginTab('github')">GitHub API</button>
+                <button id="tab-01edu" onclick="switchLoginTab('01edu')">01edu GraphQL</button>
+            </div>
+
+            <div id="form-github">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;" data-ru="Введите GitHub Username" data-en="Enter GitHub Username">Введите GitHub Username</p>
+                <input type="text" id="gh-username" value="mbelgiba" placeholder="Username">
+                <button class="btn-submit" onclick="loginGithub()" data-ru="ВОЙТИ" data-en="LOGIN">ВОЙТИ</button>
+            </div>
+
+            <div id="form-01edu" class="hidden">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;" data-ru="Введите данные 01edu" data-en="Enter 01edu Credentials">Введите данные 01edu</p>
+                <input type="text" id="edu-login" placeholder="Email / Login">
+                <input type="password" id="edu-pass" placeholder="Password">
+                <button class="btn-submit" onclick="login01edu()" data-ru="ВОЙТИ" data-en="LOGIN">ВОЙТИ</button>
+            </div>
+
+            <p id="login-error" style="color: var(--accent); font-size: 0.8rem; margin-top: 15px; display: none;" data-ru="Ошибка авторизации!" data-en="Auth Error!">Ошибка авторизации!</p>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="logo-section">DEV.CORE</div>
+        <ul class="nav-list">
+            <li class="nav-item active" onclick="switchPage('main')" data-ru="Дашборд" data-en="Dashboard"><span>📊</span> Дашборд</li>
+            <li class="nav-item" onclick="switchPage('categories')" data-ru="Категории" data-en="Categories"><span>📁</span> Категории</li>
+            <li class="nav-item" onclick="switchPage('reference')" data-ru="Справочник" data-en="Reference"><span>📚</span> Справочник</li>
+            <li class="nav-item" onclick="switchPage('settings')" data-ru="Настройки Тем" data-en="Theme Settings"><span>⚙️</span> Настройки Тем</li>
+            <li class="nav-item" data-ru="Помощь" data-en="Help"><span>❓</span> Помощь</li>
+        </ul>
+
+        <div class="user-profile">
+            <a id="profile-link" href="#" target="_blank">
+                <div class="user-avatar"><img src="" alt="" id="avatar-img" class="hidden"></div>
+                <span class="user-name" id="user-display-name">Guest</span>
+                <span class="user-link-text" id="profile-action-text">🔗 Открыть профиль</span>
+            </a>
+            <button class="btn" style="width: 100%; border-color: #ff003c; color: #ff003c; background: transparent; margin-top: 15px;" onclick="logout()" data-ru="ВЫЙТИ" data-en="LOGOUT">ВЫЙТИ</button>
+        </div>
+    </aside>
+
+    <main class="content">
+        <header class="header">
+            <div class="page-title" id="breadcrumb" data-ru="ОБЗОР ПРОФИЛЯ" data-en="PROFILE OVERVIEW">ОБЗОР ПРОФИЛЯ</div>
+            <div class="top-controls">
+                <div class="lang-switch">
+                    <span id="lang-ru" class="active" onclick="setLang('ru')">RU</span>
+                    <span id="lang-en" onclick="setLang('en')">EN</span>
+                </div>
+                <button class="btn" onclick="exportCSV()" data-ru="СКАЧАТЬ CSV" data-en="EXPORT CSV">СКАЧАТЬ CSV</button>
+            </div>
+        </header>
+
+        <div id="page-main" class="page-container">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 20px;" id="period-filters">
+                <button class="btn" onclick="updateData('week', this)" data-ru="НЕДЕЛЯ" data-en="WEEK">НЕДЕЛЯ</button>
+                <button class="btn active" onclick="updateData('month', this)" data-ru="МЕСЯЦ" data-en="MONTH">МЕСЯЦ</button>
+                <button class="btn" onclick="updateData('year', this)" data-ru="ГОД" data-en="YEAR">ГОД</button>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="glass-panel chart-panel" id="main-chart-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="panel-title" id="chart-title" style="margin:0;" data-ru="АКТИВНОСТЬ / XP" data-en="ACTIVITY / XP">АКТИВНОСТЬ / XP</div>
+                        <button class="btn" id="toggleMode" data-ru="ВИД: ЛИНИЯ" data-en="VIEW: LINE">ВИД: ЛИНИЯ</button>
+                    </div>
+                    <div class="svg-container"><svg id="svg-chart" viewBox="0 0 600 260" preserveAspectRatio="none" width="100%" height="100%"></svg></div>
+                </div>
+
+                <div class="glass-panel chart-panel hidden audit-box-centered" id="audit-chart-box" style="grid-column: span 1; padding: 20px;">
+                    <div class="panel-title" data-ru="AUDITOR ACTIVITY" data-en="AUDITOR ACTIVITY" style="width: 100%; text-align: left;">AUDITOR ACTIVITY</div>
+                    <div class="svg-container" style="height: 220px; width: 220px; background: transparent; border: none; overflow: visible; margin: 0 auto;">
+                        <svg id="chart-audits" viewBox="0 0 200 200" width="100%" height="100%" style="overflow: visible;"></svg>
+                    </div>
+                </div>
+
+                <div class="stats-panel" id="stats-container">
+                    <div class="glass-panel stat-card">
+                        <div class="stat-value" id="stat-1-val">0</div>
+                        <div class="stat-label" id="stat-1-label" data-ru="МЕТРИКА 1" data-en="METRIC 1">МЕТРИКА 1</div>
+                    </div>
+                    <div class="glass-panel stat-card">
+                        <div class="stat-value" id="stat-2-val">0</div>
+                        <div class="stat-label" id="stat-2-label" data-ru="МЕТРИКА 2" data-en="METRIC 2">МЕТРИКА 2</div>
+                    </div>
+                    <div class="glass-panel stat-card">
+                        <div class="stat-value" id="stat-3-val" style="color: var(--accent)">0</div>
+                        <div class="stat-label" id="stat-3-label" data-ru="ЛОКАЛЬНЫЙ XP" data-en="LOCAL XP">ЛОКАЛЬНЫЙ XP</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="draggable-grid" id="drag-container">
+                <div class="glass-panel drag-panel" draggable="true">
+                    <div class="panel-title" data-ru="СИСТЕМНЫЕ УВЕДОМЛЕНИЯ" data-en="SYSTEM NOTIFICATIONS">СИСТЕМНЫЕ УВЕДОМЛЕНИЯ</div>
+                    <div id="notifications-list">
+                        <div class="list-item"><span>GraphQL API Status</span><span style="color:#00ff41">OK</span></div>
+                        <div class="list-item"><span>Security Audit</span><span style="color:#00d2ff">PASS</span></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel drag-panel" draggable="true">
+                    <div class="panel-title" data-ru="БЛОКНОТ (АВТОСОХРАНЕНИЕ)" data-en="NOTEPAD (AUTOSAVE)">БЛОКНОТ</div>
+                    <textarea class="notes-area" id="notes" placeholder="..."></textarea>
+                </div>
+
+                <div class="glass-panel drag-panel" draggable="true">
+                    <div class="panel-title" id="last-activity-title" data-ru="LAST ACTIVITY (ПРОЕКТЫ)" data-en="LAST ACTIVITY (PROJECTS)">LAST ACTIVITY (ПРОЕКТЫ)</div>
+                    <div id="repo-list" style="overflow-y: auto; flex: 1;">Данные загружаются...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-settings" class="page-container hidden">
+            <div class="glass-panel" style="max-width: 700px; padding: 30px;">
+                <h2 style="color: var(--accent); margin-top: 0;" data-ru="ВЫБОР ИНТЕРФЕЙСА" data-en="INTERFACE SELECTION">ВЫБОР ИНТЕРФЕЙСА</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <button class="btn active" onclick="setTheme('blood', this)" style="padding: 15px;">🩸 NEON BLOOD</button>
+                    <button class="btn" onclick="setTheme('matrix', this)" style="padding: 15px;">🧪 DIGITAL MATRIX</button>
+                    <button class="btn" onclick="setTheme('abyss', this)" style="padding: 15px;">💎 DEEP ABYSS</button>
+                    <button class="btn" onclick="setTheme('synthwave', this)" style="padding: 15px;">🌌 SYNTHWAVE</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-categories" class="page-container hidden">
+            <div class="glass-panel"><h2 data-ru="Категории и Фильтры" data-en="Categories & Filters">Категории</h2><p>Здесь будут фильтры проектов.</p></div>
+        </div>
+        <div id="page-reference" class="page-container hidden">
+            <div class="glass-panel"><h2 data-ru="Справочник API" data-en="API Reference">Справочник</h2><p>Документация по GraphQL и REST.</p></div>
+        </div>
+    </main>
+
+    <script>
+        // === СОСТОЯНИЕ ПРИЛОЖЕНИЯ ===
+        let currentAuthSource = null; 
+        let currentLang = 'ru';
+        let currentPeriod = 'month';
+        let currentMode = 'line';
+        let activeChartData = { labels: [], points: [] }; 
+        let jwtToken = '';
+
+        const githubMockData = {
+            week: { labels: ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'], points: [12, 19, 3, 5, 2, 3, 9], xp: '1.2k' },
+            month: { labels: ['Нед 1','Нед 2','Нед 3','Нед 4'], points: [65, 59, 80, 81], xp: '8.4k' },
+            year: { labels: ['Q1','Q2','Q3','Q4'], points: [300, 450, 320, 600], xp: '24.5k' }
+        };
+
+        // === МУЛЬТИЯЗЫЧНОСТЬ ===
+        function setLang(lang) {
+            currentLang = lang;
+            document.getElementById('lang-ru').classList.toggle('active', lang === 'ru');
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.querySelectorAll('[data-ru]').forEach(el => { el.innerText = el.getAttribute(`data-${lang}`); });
+            if(currentAuthSource) updateDashboardLabels();
+        }
+
+        function switchLoginTab(tab) {
+            document.getElementById('tab-github').classList.toggle('active', tab === 'github');
+            document.getElementById('tab-01edu').classList.toggle('active', tab === '01edu');
+            document.getElementById('form-github').classList.toggle('hidden', tab !== 'github');
+            document.getElementById('form-01edu').classList.toggle('hidden', tab !== '01edu');
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        function logout() {
+            currentAuthSource = null; jwtToken = '';
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('edu-pass').value = '';
+        }
+
+        function animateStat(id, endValueStr) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            const isK = String(endValueStr).includes('k');
+            const endVal = parseFloat(endValueStr) || 0;
+            const startVal = parseFloat(el.innerText) || 0;
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / 1000, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 4);
+                let currentVal = startVal + (endVal - startVal) * easeOut;
+                
+                if (isK) el.innerText = currentVal.toFixed(1) + 'k';
+                else el.innerText = Math.floor(currentVal);
+
+                if (progress < 1) window.requestAnimationFrame(step);
+                else el.innerText = endValueStr;
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        // === GITHUB API ===
+        async function loginGithub() {
+            const username = document.getElementById('gh-username').value.trim();
+            const btn = document.querySelector('#form-github button');
+            const err = document.getElementById('login-error');
+            btn.innerText = "ЗАГРУЗКА..."; err.style.display = 'none';
+
+            try {
+                const res = await fetch(`https://api.github.com/users/${username}`);
+                if (!res.ok) throw new Error('Not found');
+                const user = await res.json();
+
+                currentAuthSource = 'github';
+                document.getElementById('profile-link').href = user.html_url;
+                document.getElementById('profile-action-text').innerText = "🔗 GitHub Account";
+
+                setupDashboardForSource(user);
+                
+                const repoRes = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=5`);
+                const repos = await repoRes.json();
+                document.getElementById('repo-list').innerHTML = repos.map(r => `<div class="list-item"><span>${r.name}</span><span style="color:var(--accent)">${r.language || 'Code'}</span></div>`).join('');
+
+                document.getElementById('login-screen').classList.add('hidden');
+                btn.innerText = "ВОЙТИ";
+            } catch (e) {
+                btn.innerText = "ВОЙТИ"; err.style.display = 'block';
+            }
+        }
+
+        // === 01EDU GRAPHQL API ===
+        async function login01edu() {
+            const login = document.getElementById('edu-login').value.trim();
+            const pass = document.getElementById('edu-pass').value;
+            const err = document.getElementById('login-error');
+            
+            if(!login || !pass) return;
+            const credentials = btoa(`${login}:${pass}`);
+
+            try {
+                const res = await fetch('https://01yessenov.yu.edu.kz/api/auth/signin', {
+                    method: 'POST', headers: { 'Authorization': `Basic ${credentials}` }
+                });
+                if (!res.ok) throw new Error('Auth failed');
+                
+                const data = await res.json(); 
+                jwtToken = typeof data === 'string' ? data : data.token;
+                
+                currentAuthSource = '01edu';
+                document.getElementById('profile-link').href = `https://01yessenov.yu.edu.kz/profile/${login}`;
+                document.getElementById('profile-action-text').innerText = "🔗 01edu Profile";
+
+                fetch01eduData();
+                document.getElementById('login-screen').classList.add('hidden');
+            } catch (e) {
+                console.warn("API failed, loading Mock 01edu data");
+                currentAuthSource = '01edu';
+                document.getElementById('profile-link').href = "#";
+                document.getElementById('profile-action-text').innerText = "🔗 Local Profile";
+                setupDashboardForSource({ login: login || 'Student_01' }, true);
+                document.getElementById('login-screen').classList.add('hidden');
+            }
+        }
+
+        async function fetch01eduData() {
+            const query = `{
+                user { login }
+                transaction(where: {type: {_in: ["xp", "up", "down"]}}, order_by: {createdAt: asc}) { type amount createdAt path }
+            }`;
+            try {
+                const res = await fetch('https://01yessenov.yu.edu.kz/api/graphql-engine/v1/graphql', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwtToken}` },
+                    body: JSON.stringify({ query })
+                });
+                const json = await res.json();
+                setupDashboardForSource(json.data.user[0], false, json.data.transaction);
+            } catch(e) { console.error(e); }
+        }
+
+        // === УПРАВЛЕНИЕ UI НА ОСНОВЕ ИСТОЧНИКА ===
+        function setupDashboardForSource(user, isMockEdu = false, transactions = []) {
+            document.getElementById('user-display-name').innerText = user.name || user.login;
+            if(user.avatar_url) {
+                document.getElementById('avatar-img').src = user.avatar_url;
+                document.getElementById('avatar-img').classList.remove('hidden');
+            } else {
+                document.getElementById('avatar-img').classList.add('hidden');
+            }
+
+            const mainChartBox = document.getElementById('main-chart-box');
+            const auditChartBox = document.getElementById('audit-chart-box');
+            const filters = document.getElementById('period-filters');
+
+            if(currentAuthSource === 'github') {
+                mainChartBox.style.gridColumn = "span 3";
+                auditChartBox.classList.add('hidden');
+                filters.classList.remove('hidden');
+                
+                document.getElementById('stat-1-val').innerText = '0';
+                document.getElementById('stat-2-val').innerText = '0';
+                animateStat('stat-1-val', user.public_repos);
+                animateStat('stat-2-val', user.followers);
+                
+                activeChartData = githubMockData[currentPeriod];
+                animateStat('stat-3-val', activeChartData.xp);
+
+            } else if (currentAuthSource === '01edu') {
+                mainChartBox.style.gridColumn = "span 2"; 
+                auditChartBox.classList.remove('hidden');
+                filters.classList.add('hidden'); 
+
+                let up = 0, down = 0, xp = 0;
+                let xpData = { labels: [], points: [] };
+                let recentProjectsHTML = "";
+
+                if(isMockEdu) {
+                    up = 18000; down = 12000; xp = 45000;
+                    xpData = { labels: ['Jan','Feb','Mar','Apr','May'], points: [5000, 12000, 25000, 38000, 45000] };
+                    recentProjectsHTML = `<div class="list-item"><span>/piscine-go/quest-01</span><span style="color:var(--accent)">14 Jan</span></div>`;
+                } else {
+                    let xpTransactions = [];
+                    transactions.forEach(t => {
+                        if(t.type === 'up') up += t.amount;
+                        if(t.type === 'down') down += t.amount;
+                        if(t.type === 'xp' && !t.path.includes('piscine')) {
+                            xp += t.amount;
+                            xpData.labels.push(new Date(t.createdAt).toLocaleDateString());
+                            xpData.points.push(xp);
+                            xpTransactions.push(t);
+                        }
+                    });
+                    
+                    xpTransactions.reverse().slice(0, 5).forEach(t => {
+                        let shortPath = t.path.split('/').pop() || t.path; 
+                        let date = new Date(t.createdAt).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'});
+                        recentProjectsHTML += `<div class="list-item"><span>${shortPath}</span><span style="color:var(--accent)">${date}</span></div>`;
+                    });
+                }
+
+                document.getElementById('repo-list').innerHTML = recentProjectsHTML;
+
+                let ratio = down === 0 ? up : (up / down);
+                document.getElementById('stat-1-val').innerText = ratio.toFixed(2);
+                document.getElementById('stat-1-val').style.color = ratio >= 1 ? '#00ff41' : '#ff003c';
+                document.getElementById('stat-2-val').innerText = Math.floor(Math.sqrt(xp / 1000)); 
+                animateStat('stat-3-val', (xp/1000).toFixed(1) + 'k');
+
+                activeChartData = xpData;
+                drawAuditChart(up, down);
+            }
+
+            updateDashboardLabels();
+            drawChart();
+        }
+
+        function updateDashboardLabels() {
+            const isRu = currentLang === 'ru';
+            if(currentAuthSource === 'github') {
+                document.getElementById('stat-1-label').innerText = isRu ? "РЕПОЗИТОРИЕВ" : "REPOSITORIES";
+                document.getElementById('stat-2-label').innerText = isRu ? "ПОДПИСЧИКОВ" : "FOLLOWERS";
+                document.getElementById('stat-3-label').innerText = isRu ? "ЛОКАЛЬНЫЙ XP" : "LOCAL XP";
+                document.getElementById('chart-title').innerText = isRu ? "АКТИВНОСТЬ (КОММИТЫ)" : "ACTIVITY (COMMITS)";
+                document.getElementById('last-activity-title').innerText = isRu ? "ПОСЛЕДНИЕ ПРОЕКТЫ" : "RECENT PROJECTS";
+            } else {
+                document.getElementById('stat-1-label').innerText = isRu ? "AUDIT RATIO" : "AUDIT RATIO";
+                document.getElementById('stat-2-label').innerText = isRu ? "УРОВЕНЬ" : "LEVEL";
+                document.getElementById('stat-3-label').innerText = isRu ? "ОБЩИЙ XP" : "TOTAL XP";
+                document.getElementById('chart-title').innerText = isRu ? "ПРОГРЕСС XP ВО ВРЕМЕНИ" : "XP PROGRESS OVER TIME";
+                document.getElementById('last-activity-title').innerText = isRu ? "LAST ACTIVITY (ПРОЕКТЫ)" : "LAST ACTIVITY (PROJECTS)";
+            }
+        }
+
+        function switchPage(page) {
+            document.querySelectorAll('.page-container').forEach(c => c.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById('page-' + page).classList.remove('hidden');
+            event.currentTarget.classList.add('active');
+        }
+
+        function setTheme(themeName, btnElement) {
+            document.body.className = `theme-${themeName}`;
+            const btns = btnElement.parentElement.querySelectorAll('.btn');
+            btns.forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            setTimeout(() => { 
+                drawChart(); 
+                if(currentAuthSource === '01edu') drawAuditChart(18000, 12000); // Перерисовка кругов при смене темы (цвета)
+            }, 50); 
+        }
+
+        function updateData(period, btn) {
+            if(currentAuthSource !== 'github') return;
+            currentPeriod = period;
+            btn.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeChartData = githubMockData[period];
+            animateStat('stat-3-val', activeChartData.xp);
+            drawChart();
+        }
+
+        document.getElementById('toggleMode').onclick = function() {
+            currentMode = currentMode === 'line' ? 'bar' : 'line';
+            this.innerText = (currentLang === 'ru' ? "ВИД: " : "VIEW: ") + (currentMode === 'line' ? (currentLang==='ru'?'ЛИНИЯ':'LINE') : (currentLang==='ru'?'СТОЛБЦЫ':'BARS'));
+            drawChart();
+        };
+
+        function drawChart() {
+            const svg = document.getElementById('svg-chart');
+            const tooltip = document.getElementById('tooltip');
+            svg.innerHTML = '';
+            
+            const data = activeChartData;
+            if(!data.points || data.points.length === 0) return;
+
+            const w = svg.clientWidth || 600, h = svg.clientHeight || 260, px = 40, py = 40;
+            const max = Math.max(...data.points) || 1;
+            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+            
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            defs.innerHTML = `<linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${accentColor}" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="${accentColor}" stop-opacity="0.0"/>
+            </linearGradient>`;
+            svg.appendChild(defs);
+
+            if (currentMode === 'line') {
+                let pts = data.points.map((v, i) => ({
+                    x: px + (i * ((w - px*2) / (data.points.length > 1 ? data.points.length - 1 : 1))),
+                    y: (h - py) - ((v / max) * (h - py*2))
+                }));
+
+                let pathStr = `M ${pts[0].x},${pts[0].y} `;
+                for (let i = 1; i < pts.length; i++) {
+                    let cpX = (pts[i-1].x + pts[i].x) / 2; 
+                    pathStr += `C ${cpX},${pts[i-1].y} ${cpX},${pts[i].y} ${pts[i].x},${pts[i].y} `;
+                }
+
+                let areaStr = pathStr + `L ${pts[pts.length-1].x},${h-py} L ${pts[0].x},${h-py} Z`;
+                const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                area.setAttribute("d", areaStr); area.setAttribute("fill", "url(#areaGrad)");
+                svg.appendChild(area);
+
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                line.setAttribute("d", pathStr); line.setAttribute("stroke", accentColor); 
+                line.setAttribute("stroke-width", 3); line.setAttribute("fill", "none");
+                line.style.filter = `drop-shadow(0px 0px 8px ${accentColor})`;
+                svg.appendChild(line);
+
+                pts.forEach((pt, i) => {
+                    const zone = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    let segmentW = (w - px*2) / (pts.length > 1 ? pts.length - 1 : 1);
+                    zone.setAttribute("x", pt.x - segmentW/2); zone.setAttribute("y", 0);
+                    zone.setAttribute("width", segmentW); zone.setAttribute("height", h);
+                    zone.setAttribute("fill", "transparent"); zone.style.cursor = "crosshair";
+
+                    zone.onmouseover = () => {
+                        tooltip.style.opacity = 1;
+                        tooltip.innerHTML = `<span style="color:${accentColor};">${data.labels[i]}</span><br/>Значение: <b>${data.points[i]}</b>`;
+                    };
+                    zone.onmousemove = (e) => { tooltip.style.left = e.pageX+15+'px'; tooltip.style.top = e.pageY-30+'px'; };
+                    zone.onmouseout = () => tooltip.style.opacity = 0;
+                    svg.appendChild(zone);
+                });
+            } else {
+                const barW = (w - px*2) / data.points.length - 10;
+                data.points.forEach((v, i) => {
+                    const x = px + (i * ((w - px*2) / data.points.length)) + 5;
+                    const barH = (v / max) * (h - py*2);
+                    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    rect.setAttribute("x", x); rect.setAttribute("y", h - py);
+                    rect.setAttribute("width", barW); rect.setAttribute("height", 0);
+                    rect.setAttribute("fill", accentColor); 
+
+                    setTimeout(() => { rect.setAttribute("y", (h - py) - barH); rect.setAttribute("height", barH || 1); }, 50);
+                    
+                    rect.onmouseover = () => {
+                        rect.style.opacity = 0.7; tooltip.style.opacity = 1; 
+                        tooltip.innerHTML = `<span style="color:${accentColor};">${data.labels[i]}</span><br/>Значение: <b>${v}</b>`;
+                    };
+                    rect.onmousemove = (e) => { tooltip.style.left = e.pageX+15+'px'; tooltip.style.top = e.pageY-30+'px'; };
+                    rect.onmouseout = () => { rect.style.opacity = 1; tooltip.style.opacity = 0; };
+                    svg.appendChild(rect);
+                });
+            }
+        }
+
+        // === НОВЫЙ КРУГОВОЙ ГРАФИК АУДИТОВ ===
+        function drawAuditChart(up, down) {
+            const svg = document.getElementById('chart-audits');
+            svg.innerHTML = '';
+            
+            // Задаем строгий квадрат 200x200 для идеального круга
+            const size = 200;
+            const cx = size / 2;
+            const cy = size / 2 - 10; // Немного поднимаем центр, чтобы влезли надписи внизу
+            
+            const strokeW = 12; // Толщина линий
+            const radiusUp = 75; // Внешний круг (Done)
+            const radiusDown = 55; // Внутренний круг (Received)
+
+            const maxVal = Math.max(up, down) || 1;
+
+            const circUp = 2 * Math.PI * radiusUp;
+            const circDown = 2 * Math.PI * radiusDown;
+
+            const upFill = (up / maxVal) * circUp;
+            const downFill = (down / maxVal) * circDown;
+
+            // Функция отрисовки одного кольца
+            const createRing = (r, color, maxCirc, fillAmount) => {
+                // Серый фоновый круг
+                const track = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                track.setAttribute("cx", cx); track.setAttribute("cy", cy);
+                track.setAttribute("r", r);
+                track.setAttribute("fill", "none");
+                track.setAttribute("stroke", "rgba(255,255,255,0.05)");
+                track.setAttribute("stroke-width", strokeW);
+                svg.appendChild(track);
+
+                // Цветной круг (заполняющийся)
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", cx); circle.setAttribute("cy", cy);
+                circle.setAttribute("r", r);
+                circle.setAttribute("fill", "none");
+                circle.setAttribute("stroke", color);
+                circle.setAttribute("stroke-width", strokeW);
+                circle.setAttribute("stroke-linecap", "round"); // Закругленные концы
+                
+                // Настройки анимации длины
+                circle.setAttribute("stroke-dasharray", maxCirc);
+                circle.setAttribute("stroke-dashoffset", maxCirc); // Прячем линию в начале
+                circle.style.transition = "stroke-dashoffset 1.5s ease-out";
+                circle.style.filter = `drop-shadow(0px 0px 5px ${color})`;
+                
+                // Начинаем рисовать сверху (12 часов)
+                circle.style.transformOrigin = "center";
+                circle.style.transform = "rotate(-90deg)";
+
+                setTimeout(() => {
+                    circle.setAttribute("stroke-dashoffset", maxCirc - fillAmount);
+                }, 100);
+
+                svg.appendChild(circle);
+            };
+
+            // Рисуем круги: Зеленый (Внешний) и Красный (Внутренний)
+            createRing(radiusUp, "#00ff41", circUp, upFill);
+            createRing(radiusDown, "#ff003c", circDown, downFill);
+
+            // Текст в центре круга (Сам Ratio)
+            let ratio = down === 0 ? (up/1000).toFixed(1) : (up / down).toFixed(2);
+            
+            const ratioText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            ratioText.setAttribute("x", cx); ratioText.setAttribute("y", cy + 8);
+            ratioText.setAttribute("fill", ratio >= 1 ? "#00ff41" : "#ff003c");
+            ratioText.setAttribute("font-size", "26");
+            ratioText.setAttribute("font-weight", "900");
+            ratioText.setAttribute("text-anchor", "middle");
+            ratioText.textContent = ratio;
+            ratioText.style.filter = `drop-shadow(0px 0px 8px ${ratio >= 1 ? "#00ff41" : "#ff003c"})`;
+            svg.appendChild(ratioText);
+
+            const labelText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            labelText.setAttribute("x", cx); labelText.setAttribute("y", cy + 25);
+            labelText.setAttribute("fill", "var(--text-muted)");
+            labelText.setAttribute("font-size", "10");
+            labelText.setAttribute("font-weight", "bold");
+            labelText.setAttribute("text-anchor", "middle");
+            labelText.textContent = "RATIO";
+            svg.appendChild(labelText);
+
+            // Легенда в самом низу (Под кругами)
+            const addLegend = (x, y, color, label, valStr) => {
+                const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                dot.setAttribute("cx", x); dot.setAttribute("cy", y - 3);
+                dot.setAttribute("r", 4); dot.setAttribute("fill", color);
+                dot.style.filter = `drop-shadow(0px 0px 3px ${color})`;
+
+                const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                txt.setAttribute("x", x + 10); txt.setAttribute("y", y);
+                txt.setAttribute("fill", "#fff");
+                txt.setAttribute("font-size", "11");
+                txt.textContent = `${label} (${valStr})`;
+
+                svg.appendChild(dot); svg.appendChild(txt);
+            };
+
+            const upKB = (up / 1000).toFixed(1) + "kB";
+            const downKB = (down / 1000).toFixed(1) + "kB";
+            
+            addLegend(15, size - 10, "#00ff41", "Done", upKB);
+            addLegend(110, size - 10, "#ff003c", "Received", downKB);
+        }
+
+        // DRAG & DROP
+        const draggables = document.querySelectorAll('.drag-panel');
+        const container = document.getElementById('drag-container');
+        draggables.forEach(d => {
+            d.addEventListener('dragstart', () => d.classList.add('dragging'));
+            d.addEventListener('dragend', () => d.classList.remove('dragging'));
+        });
+        container.addEventListener('dragover', e => {
+            e.preventDefault();
+            const afterElement = [...container.querySelectorAll('.drag-panel:not(.dragging)')].reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = e.clientX - box.left - box.width / 2;
+                if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+                else return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+            const draggable = document.querySelector('.dragging');
+            if (afterElement == null) container.appendChild(draggable);
+            else container.insertBefore(draggable, afterElement);
+        });
+
+        function exportCSV() {
+            let csvContent = "Период,Значение\n";
+            activeChartData.labels.forEach((label, i) => { csvContent += `${label},${activeChartData.points[i]}\n`; });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob); link.download = `export.csv`;
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        const notesArea = document.getElementById('notes');
+        notesArea.value = localStorage.getItem('devboard_notes') || "";
+        notesArea.oninput = () => localStorage.setItem('devboard_notes', notesArea.value);
+    </script>
+</body>
+</html>
